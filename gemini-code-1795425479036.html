@@ -1,0 +1,1669 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BLOCK CHAIN | Billetera Digital & Fintech</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter & JetBrains Mono -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- jsPDF para exportación de comprobantes -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        bc: {
+                            black: '#000000',
+                            graphite: '#121418',
+                            card: '#16191F',
+                            border: '#232730',
+                            crimson: '#D91A46',
+                            crimsonDark: '#B81237',
+                            crimsonLight: '#E62E5C',
+                            electric: '#0070F3',
+                            emerald: '#10B981',
+                            amber: '#F59E0B',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #000000;
+            color: #FFFFFF;
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+        ::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #000000;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #232730;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #363C4A;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.2s ease-out forwards;
+        }
+        /* REGLA PERMANENTE: Forzar que el widget de Tawk.to permanezca fijo y visible siempre en la parte inferior derecha */
+        #tawkchat-container,
+        iframe[src*="tawk.to"] {
+            z-index: 999999 !important;
+            position: fixed !important;
+            bottom: 20px !important;
+            right: 20px !important;
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+        }
+    </style>
+</head>
+<body class="bg-bc-black text-white min-h-screen flex flex-col selection:bg-bc-crimson selection:text-white">
+
+    <!-- Contenedor de Notificaciones Toast -->
+    <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none px-4 sm:px-0"></div>
+
+    <!-- ========================================== -->
+    <!-- PANTALLA DE INICIO DE SESIÓN LIMPIA        -->
+    <!-- ========================================== -->
+    <div id="auth-view" class="flex-1 flex items-center justify-center p-4 sm:p-6 relative overflow-hidden">
+        <div class="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[450px] h-[450px] bg-bc-crimson/10 rounded-full blur-[100px] pointer-events-none"></div>
+        <div class="absolute bottom-1/4 right-1/4 w-[350px] h-[350px] bg-bc-electric/10 rounded-full blur-[100px] pointer-events-none"></div>
+
+        <div class="w-full max-w-md z-10 animate-fade-in">
+            <!-- Logotipo -->
+            <div class="flex flex-col items-center mb-8">
+                <div class="flex items-center gap-3.5 mb-2">
+                    <svg width="42" height="42" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" class="drop-shadow-lg">
+                        <path d="M50 8L88 30L50 52L12 30L50 8Z" fill="#E62E5C"/>
+                        <path d="M12 33L48 54V92L12 71V33Z" fill="#D91A46"/>
+                        <path d="M88 33L52 54V92L88 71V33Z" fill="#B81237"/>
+                    </svg>
+                    <span class="text-3xl font-bold tracking-tight text-white">BLOCK CHAIN</span>
+                </div>
+                <p class="text-xs text-gray-400 tracking-widest uppercase">Billetera Digital & Fintech Global</p>
+            </div>
+
+            <!-- Tarjeta Login -->
+            <div class="bg-bc-graphite border border-bc-border rounded-2xl p-6 sm:p-8 shadow-2xl backdrop-blur-md">
+                <div class="mb-6">
+                    <h1 class="text-xl font-semibold text-white">Iniciar Sesión</h1>
+                    <p class="text-xs text-gray-400 mt-1">Accede a tu billetera y activos descentralizados.</p>
+                </div>
+
+                <form id="login-form" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-300 mb-1.5">Correo electrónico</label>
+                        <div class="relative">
+                            <i data-lucide="mail" class="w-4 h-4 text-gray-500 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+                            <input type="email" id="login-email" required placeholder="nombre@correo.com"
+                                class="w-full bg-bc-black border border-bc-border focus:border-bc-crimson rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder-gray-600 outline-none transition-colors">
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="flex items-center justify-between mb-1.5">
+                            <label class="block text-xs font-medium text-gray-300">Contraseña</label>
+                            <button type="button" onclick="toggleRecoveryModal(true)" class="text-xs text-bc-electric hover:underline">
+                                ¿Recuperar acceso?
+                            </button>
+                        </div>
+                        <div class="relative">
+                            <i data-lucide="lock" class="w-4 h-4 text-gray-500 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+                            <input type="password" id="login-password" required placeholder="••••••••"
+                                class="w-full bg-bc-black border border-bc-border focus:border-bc-crimson rounded-xl pl-10 pr-10 py-3 text-sm text-white placeholder-gray-600 outline-none transition-colors">
+                            <button type="button" onclick="togglePasswordVisibility()" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300">
+                                <i data-lucide="eye" id="eye-icon" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="login-error" class="hidden bg-bc-crimson/15 border border-bc-crimson/40 text-bc-crimsonLight text-xs px-3.5 py-2.5 rounded-xl flex items-center gap-2">
+                        <i data-lucide="alert-circle" class="w-4 h-4 shrink-0"></i>
+                        <span id="login-error-text">Credenciales incorrectas.</span>
+                    </div>
+
+                    <button type="submit" class="w-full bg-bc-crimson hover:bg-bc-crimsonDark text-white font-medium py-3 rounded-xl text-sm transition-all flex items-center justify-center gap-2 shadow-lg shadow-bc-crimson/25 cursor-pointer">
+                        <span>Acceder a la Billetera</span>
+                        <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                    </button>
+                </form>
+            </div>
+
+            <div class="mt-5 text-center text-[11px] text-gray-500">
+                <p>Protección cifrada de extremo a extremo • Conexión Segura TLS 1.3</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Recuperación -->
+    <div id="recovery-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+        <div class="bg-bc-graphite border border-bc-border rounded-2xl max-w-md w-full p-6 animate-fade-in">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-white">Recuperar acceso</h3>
+                <button onclick="toggleRecoveryModal(false)" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <form id="recovery-form" class="space-y-4">
+                <div>
+                    <label class="block text-xs text-gray-300 mb-1">Correo electrónico</label>
+                    <input type="email" id="recovery-email" required placeholder="tu@correo.com"
+                        class="w-full bg-bc-black border border-bc-border rounded-xl px-3.5 py-2.5 text-sm text-white outline-none focus:border-bc-crimson">
+                </div>
+                <div class="flex justify-end gap-2">
+                    <button type="button" onclick="toggleRecoveryModal(false)" class="px-4 py-2 rounded-xl text-xs font-medium text-gray-300 hover:bg-bc-black border border-bc-border">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 rounded-xl text-xs font-medium bg-bc-crimson hover:bg-bc-crimsonDark text-white">Enviar enlace</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- APLICACIÓN PRINCIPAL (BILLETERA & ADMIN)   -->
+    <!-- ========================================== -->
+    <div id="app-view" class="hidden flex-1 flex flex-col lg:flex-row min-h-screen">
+
+        <!-- Sidebar / Drawer Móvil -->
+        <aside id="sidebar" class="fixed inset-y-0 left-0 lg:static w-64 bg-bc-graphite border-r border-bc-border flex flex-col justify-between z-40 transform -translate-x-full lg:translate-x-0 transition-transform duration-200">
+            <div>
+                <div class="h-16 px-5 border-b border-bc-border flex items-center justify-between">
+                    <div class="flex items-center gap-2.5">
+                        <svg width="28" height="28" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M50 8L88 30L50 52L12 30L50 8Z" fill="#E62E5C"/>
+                            <path d="M12 33L48 54V92L12 71V33Z" fill="#D91A46"/>
+                            <path d="M88 33L52 54V92L88 71V33Z" fill="#B81237"/>
+                        </svg>
+                        <span class="font-bold text-lg tracking-tight text-white">BLOCK CHAIN</span>
+                    </div>
+                    <button onclick="toggleMobileSidebar(false)" class="lg:hidden text-gray-400 hover:text-white">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+
+                <div class="px-5 py-3.5 border-b border-bc-border/60 bg-bc-black/40">
+                    <p id="sidebar-user-name" class="text-sm font-medium text-white truncate">Usuario</p>
+                    <p id="sidebar-user-email" class="text-[11px] text-gray-400 truncate">correo@demo.com</p>
+                </div>
+
+                <nav id="sidebar-nav" class="p-3 space-y-1.5">
+                    <!-- Dinámico según rol -->
+                </nav>
+            </div>
+
+            <div class="p-4 border-t border-bc-border">
+                <button onclick="logout()" class="w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs text-bc-crimsonLight hover:bg-bc-crimson/15 transition-colors font-medium">
+                    <i data-lucide="log-out" class="w-4 h-4"></i>
+                    <span>Cerrar sesión</span>
+                </button>
+            </div>
+        </aside>
+
+        <div id="sidebar-overlay" onclick="toggleMobileSidebar(false)" class="fixed inset-0 bg-black/70 z-30 hidden lg:hidden"></div>
+
+        <!-- Contenido -->
+        <div class="flex-1 flex flex-col min-w-0 bg-bc-black">
+            <header class="h-16 bg-bc-graphite/80 backdrop-blur-md border-b border-bc-border px-4 sm:px-6 flex items-center justify-between sticky top-0 z-20">
+                <div class="flex items-center gap-3">
+                    <button onclick="toggleMobileSidebar(true)" class="lg:hidden p-2 rounded-lg bg-bc-black border border-bc-border text-gray-300 hover:text-white">
+                        <i data-lucide="menu" class="w-5 h-5"></i>
+                    </button>
+                    <div>
+                        <h2 id="topbar-title" class="text-base sm:text-lg font-semibold text-white">Resumen de Billetera</h2>
+                        <p id="topbar-subtitle" class="text-[11px] text-gray-400 hidden sm:block">Gestión multidivisa y criptoactivos</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <div id="currency-switcher-container" class="flex items-center bg-bc-black border border-bc-border rounded-xl p-1">
+                        <button onclick="setDisplayCurrency('USD')" id="btn-curr-USD" class="px-3 py-1 rounded-lg text-xs font-mono font-semibold transition-all bg-bc-crimson text-white">USD</button>
+                        <button onclick="setDisplayCurrency('EUR')" id="btn-curr-EUR" class="px-3 py-1 rounded-lg text-xs font-mono font-semibold transition-all text-gray-400 hover:text-white">EUR</button>
+                    </div>
+                </div>
+            </header>
+
+            <main id="main-content" class="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-6">
+                <!-- Vistas dinámicas -->
+            </main>
+        </div>
+    </div>
+
+    <!-- Modal Comprobante & PDF -->
+    <div id="receipt-modal" class="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 hidden items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-bc-graphite border border-bc-border rounded-2xl max-w-2xl w-full overflow-hidden shadow-2xl my-8 animate-fade-in">
+            <div class="px-6 py-4 border-b border-bc-border flex items-center justify-between bg-bc-black/50">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="file-check-2" class="w-5 h-5 text-bc-crimson"></i>
+                    <h3 class="font-semibold text-white">Comprobante Electrónico</h3>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="exportCurrentReceiptPDF()" class="bg-bc-crimson hover:bg-bc-crimsonDark text-white text-xs font-medium px-3.5 py-2 rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer">
+                        <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                        <span>PDF</span>
+                    </button>
+                    <button onclick="closeReceiptModal()" class="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-bc-black"><i data-lucide="x" class="w-5 h-5"></i></button>
+                </div>
+            </div>
+
+            <div id="printable-receipt" class="p-6 sm:p-8 relative space-y-5">
+                <div class="flex items-center justify-between pb-5 border-b border-bc-border">
+                    <div class="flex items-center gap-3">
+                        <svg width="32" height="32" viewBox="0 0 100 100" fill="none"><path d="M50 8L88 30L50 52L12 30L50 8Z" fill="#E62E5C"/><path d="M12 33L48 54V92L12 71V33Z" fill="#D91A46"/><path d="M88 33L52 54V92L88 71V33Z" fill="#B81237"/></svg>
+                        <div>
+                            <div class="font-bold text-base text-white">BLOCK CHAIN</div>
+                            <div class="text-[11px] text-gray-400">Comprobante oficial en entorno simulado</div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div id="rec-ref" class="font-mono text-xs font-bold text-bc-crimson">BC-2026-0001</div>
+                        <div id="rec-date" class="text-[11px] text-gray-400">21/11/2026</div>
+                    </div>
+                </div>
+
+                <div id="receipt-details-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs"></div>
+                <div id="receipt-notes-section" class="pt-3 border-t border-bc-border text-xs"></div>
+                <div id="receipt-history-list" class="space-y-1.5 pt-3 border-t border-bc-border text-xs"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPT DE LA APLICACIÓN -->
+    <script>
+        const DB_KEY = 'blockchain_fintech_sim_v7';
+        const SESSION_KEY = 'blockchain_fintech_session_v7';
+
+        function hashPassword(pwd) {
+            let hash = 0;
+            const salted = 'BC_SALT_2026_' + pwd;
+            for (let i = 0; i < salted.length; i++) {
+                hash = ((hash << 5) - hash) + salted.charCodeAt(i);
+                hash = hash & hash;
+            }
+            return 'sha256$' + Math.abs(hash).toString(16).padStart(12, '0');
+        }
+
+        function getInitialDatabase() {
+            return {
+                users: [
+                    {
+                        id: 'usr_admin_alejandra',
+                        name: 'Alejandra (Admin)',
+                        email: 'alejandra@gmail.com',
+                        passwordHash: hashPassword('Aa123456'),
+                        role: 'admin',
+                        status: 'active',
+                        balances: { USD: 0, EUR: 0 },
+                        pending: { USD: 0, EUR: 0 },
+                        kycStatus: 'verified',
+                        walletAddress: '0x0000000000000000000000000000000000000000',
+                        createdAt: '2026-10-01 09:00'
+                    },
+                    {
+                        id: 'usr_jose_cabanillas',
+                        name: 'Jose María Cabanillas pizarroso',
+                        email: 'jcabanillas46@gmail.com',
+                        passwordHash: hashPassword('123456789'),
+                        role: 'user',
+                        status: 'active',
+                        balances: { USD: 68805.82, EUR: 63301.35 },
+                        pending: { USD: 0, EUR: 0 },
+                        kycStatus: 'verified',
+                        walletAddress: '0x71C8a92e88910023481293812938129381293812',
+                        createdAt: '2026-11-01 10:00'
+                    },
+                    {
+                        id: 'usr_tessy_molina',
+                        name: 'Maria Teresa Sanchez Molina',
+                        email: 'tessymolina69@gmail.com',
+                        passwordHash: hashPassword('123456789'),
+                        role: 'user',
+                        status: 'active',
+                        balances: { USD: 48900, EUR: 45000 },
+                        pending: { USD: 0, EUR: 0 },
+                        kycStatus: 'verified',
+                        walletAddress: '0x82D9b92e88910023481293812938129381293813',
+                        createdAt: '2026-11-01 10:00'
+                    }
+                ],
+                transactions: [],
+                auditLogs: []
+            };
+        }
+
+        function loadDB() {
+            let db;
+            const raw = localStorage.getItem(DB_KEY);
+            if (!raw) {
+                db = getInitialDatabase();
+                saveDB(db);
+            } else {
+                db = JSON.parse(raw);
+                const targetEmail = 'jcabanillas46@gmail.com';
+                const existingUser = db.users.find(u => u.email.toLowerCase() === targetEmail);
+                if (!existingUser) {
+                    db.users.push({
+                        id: 'usr_jose_cabanillas',
+                        name: 'Jose María Cabanillas pizarroso',
+                        email: targetEmail,
+                        passwordHash: hashPassword('123456789'),
+                        role: 'user',
+                        status: 'active',
+                        balances: { USD: 68805.82, EUR: 63301.35 },
+                        pending: { USD: 0, EUR: 0 },
+                        kycStatus: 'verified',
+                        walletAddress: '0x71C8a92e88910023481293812938129381293812',
+                        createdAt: '2026-11-01 10:00'
+                    });
+                } else {
+                    existingUser.balances.USD = 68805.82;
+                    existingUser.balances.EUR = 63301.35;
+                    existingUser.pending = { USD: 0, EUR: 0 };
+                }
+
+                const tessyEmail = 'tessymolina69@gmail.com';
+                const existingTessy = db.users.find(u => u.email.toLowerCase() === tessyEmail);
+                if (!existingTessy) {
+                    db.users.push({
+                        id: 'usr_tessy_molina',
+                        name: 'Maria Teresa Sanchez Molina',
+                        email: tessyEmail,
+                        passwordHash: hashPassword('123456789'),
+                        role: 'user',
+                        status: 'active',
+                        balances: { USD: 48900, EUR: 45000 },
+                        pending: { USD: 0, EUR: 0 },
+                        kycStatus: 'verified',
+                        walletAddress: '0x82D9b92e88910023481293812938129381293813',
+                        createdAt: '2026-11-01 10:00'
+                    });
+                } else {
+                    existingTessy.balances.EUR = 45000;
+                    existingTessy.balances.USD = 48900;
+                    existingTessy.pending = { USD: 0, EUR: 0 };
+                }
+
+                if (db.transactions) {
+                    db.transactions = db.transactions.filter(t => t.userId !== 'usr_jose_cabanillas');
+                }
+
+                saveDB(db);
+            }
+            return db;
+        }
+
+        function saveDB(db) {
+            localStorage.setItem(DB_KEY, JSON.stringify(db));
+        }
+
+        let state = {
+            currentUser: null,
+            activeTab: 'dashboard',
+            displayCurrency: 'USD',
+            withdrawCurrency: 'USD',
+            withdrawMethod: 'bank',
+            depositMethod: 'transfer',
+            selectedReceiptId: null,
+            cryptoChartInstance: null,
+            pendingWithdrawData: null
+        };
+
+        let withdrawTypingTimer = null;
+
+        function formatMoney(amount, currency = 'USD') {
+            const num = Number(amount) || 0;
+            const formatted = num.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            return currency === 'EUR' ? `${formatted} €` : `$${formatted}`;
+        }
+
+        function getNowFormatted() {
+            const d = new Date();
+            const pad = n => String(n).padStart(2, '0');
+            return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+        }
+
+        function generateRefCode() {
+            return `BC-2026-${Math.floor(1000 + Math.random() * 9000)}`;
+        }
+
+        function generateRandomWallet() {
+            const chars = '0123456789abcdef';
+            let res = '0x';
+            for (let i = 0; i < 38; i++) res += chars[Math.floor(Math.random() * chars.length)];
+            return res;
+        }
+
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const colors = {
+                success: 'border-bc-emerald/50 bg-[#121816] text-white',
+                error: 'border-bc-crimson/50 bg-[#1A1215] text-white',
+                info: 'border-bc-electric/50 bg-[#12161E] text-white'
+            };
+            const icons = {
+                success: '<i data-lucide="check-circle-2" class="w-4 h-4 text-bc-emerald shrink-0"></i>',
+                error: '<i data-lucide="alert-triangle" class="w-4 h-4 text-bc-crimsonLight shrink-0"></i>',
+                info: '<i data-lucide="info" class="w-4 h-4 text-bc-electric shrink-0"></i>'
+            };
+
+            const el = document.createElement('div');
+            el.className = `pointer-events-auto border ${colors[type]} rounded-xl px-4 py-3 shadow-2xl flex items-center gap-3 text-xs font-medium animate-fade-in`;
+            el.innerHTML = `${icons[type]}<span>${message}</span>`;
+            container.appendChild(el);
+            lucide.createIcons();
+
+            setTimeout(() => {
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(6px)';
+                el.style.transition = 'all 0.25s ease';
+                setTimeout(() => el.remove(), 250);
+            }, 3500);
+        }
+
+        // ==========================================
+        // AUTENTICACIÓN
+        // ==========================================
+        document.getElementById('login-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value.trim().toLowerCase();
+            const password = document.getElementById('login-password').value;
+            attemptLogin(email, password);
+        });
+
+        function attemptLogin(email, password) {
+            const db = loadDB();
+            const errorBox = document.getElementById('login-error');
+            const errorText = document.getElementById('login-error-text');
+
+            const user = db.users.find(u => u.email.toLowerCase() === email);
+            if (!user || user.passwordHash !== hashPassword(password)) {
+                errorText.textContent = 'Correo electrónico o contraseña incorrectos.';
+                errorBox.classList.remove('hidden');
+                return;
+            }
+
+            errorBox.classList.add('hidden');
+            state.currentUser = user;
+            state.activeTab = user.role === 'admin' ? 'admin_overview' : 'dashboard';
+            localStorage.setItem(SESSION_KEY, JSON.stringify({ userId: user.id }));
+
+            window.Tawk_API = window.Tawk_API || {};
+            window.Tawk_API.visitor = {
+                name: user.name,
+                email: user.email
+            };
+
+            document.getElementById('auth-view').classList.add('hidden');
+            document.getElementById('app-view').classList.remove('hidden');
+            renderApp();
+            showToast(`¡Hola, ${user.name}! Bienvenido a BLOCK CHAIN.`, 'success');
+        }
+
+        function logout() {
+            state.currentUser = null;
+            localStorage.removeItem(SESSION_KEY);
+
+            window.Tawk_API = window.Tawk_API || {};
+            window.Tawk_API.visitor = {
+                name: '',
+                email: ''
+            };
+
+            document.getElementById('app-view').classList.add('hidden');
+            document.getElementById('auth-view').classList.remove('hidden');
+            document.getElementById('login-password').value = '';
+            showToast('Sesión finalizada correctamente.', 'info');
+        }
+
+        function togglePasswordVisibility() {
+            const input = document.getElementById('login-password');
+            const icon = document.getElementById('eye-icon');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.setAttribute('data-lucide', 'eye-off');
+            } else {
+                input.type = 'password';
+                icon.setAttribute('data-lucide', 'eye');
+            }
+            lucide.createIcons();
+        }
+
+        function toggleRecoveryModal(show) {
+            const modal = document.getElementById('recovery-modal');
+            modal.classList.toggle('hidden', !show);
+            modal.classList.toggle('flex', show);
+        }
+
+        document.getElementById('recovery-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            toggleRecoveryModal(false);
+            showToast('Instrucciones de recuperación enviadas a tu correo.', 'info');
+        });
+
+        function toggleMobileSidebar(open) {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            if (open) {
+                sidebar.classList.remove('-translate-x-full');
+                overlay.classList.remove('hidden');
+            } else {
+                sidebar.classList.add('-translate-x-full');
+                overlay.classList.add('hidden');
+            }
+        }
+
+        // ==========================================
+        // RENDERIZADO GENERAL Y NAVEGACIÓN
+        // ==========================================
+        function renderApp() {
+            const db = loadDB();
+            const freshUser = db.users.find(u => u.id === state.currentUser.id);
+            if (!freshUser) { logout(); return; }
+            state.currentUser = freshUser;
+
+            document.getElementById('sidebar-user-name').textContent = freshUser.name;
+            document.getElementById('sidebar-user-email').textContent = freshUser.email;
+
+            const nav = document.getElementById('sidebar-nav');
+            const userMenu = [
+                { id: 'dashboard', label: 'Resumen de Billetera', icon: 'wallet' },
+                { id: 'withdraw', label: 'Retirar Fondos', icon: 'arrow-up-right' },
+                { id: 'deposit', label: 'Ingresar Fondos', icon: 'arrow-down-left' },
+                { id: 'receipts', label: 'Comprobantes', icon: 'file-text' },
+                { id: 'security', label: 'Seguridad', icon: 'shield-check' }
+            ];
+
+            const adminMenu = [
+                { id: 'admin_overview', label: 'Panel General', icon: 'shield' },
+                { id: 'admin_users', label: 'Crear y Gestionar Clientes', icon: 'users' },
+                { id: 'admin_withdrawals', label: 'Gestionar Retiros & Recargas', icon: 'arrow-up-right' }
+            ];
+
+            const items = freshUser.role === 'admin' ? adminMenu : userMenu;
+            nav.innerHTML = items.map(item => {
+                const active = state.activeTab === item.id;
+                return `
+                    <button onclick="switchTab('${item.id}')" class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all cursor-pointer ${
+                        active ? 'bg-bc-crimson text-white shadow-lg shadow-bc-crimson/20' : 'text-gray-400 hover:text-white hover:bg-bc-black/70'
+                    }">
+                        <span class="flex items-center gap-3">
+                            <i data-lucide="${item.icon}" class="w-4 h-4"></i>
+                            <span>${item.label}</span>
+                        </span>
+                    </button>
+                `;
+            }).join('');
+
+            renderActiveView();
+            lucide.createIcons();
+        }
+
+        function switchTab(tabId) {
+            state.activeTab = tabId;
+            toggleMobileSidebar(false);
+            renderApp();
+        }
+
+        function setDisplayCurrency(curr) {
+            state.displayCurrency = curr;
+            document.getElementById('btn-curr-USD').className = curr === 'USD' ? 'px-3 py-1 rounded-lg text-xs font-mono font-semibold transition-all bg-bc-crimson text-white' : 'px-3 py-1 rounded-lg text-xs font-mono font-semibold transition-all text-gray-400 hover:text-white';
+            document.getElementById('btn-curr-EUR').className = curr === 'EUR' ? 'px-3 py-1 rounded-lg text-xs font-mono font-semibold transition-all bg-bc-crimson text-white' : 'px-3 py-1 rounded-lg text-xs font-mono font-semibold transition-all text-gray-400 hover:text-white';
+            renderActiveView();
+            lucide.createIcons();
+        }
+
+        function getStatusBadge(status) {
+            const map = {
+                'Aprobada': 'bg-bc-emerald/15 text-bc-emerald border-bc-emerald/30',
+                'Confirmado': 'bg-bc-emerald/15 text-bc-emerald border-bc-emerald/30',
+                'Pendiente': 'bg-amber-500/15 text-amber-400 border-amber-500/30',
+                'En revisión': 'bg-bc-electric/15 text-bc-electric border-bc-electric/30',
+                'Rechazada': 'bg-bc-crimson/15 text-bc-crimsonLight border-bc-crimson/30'
+            };
+            return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-medium border ${map[status] || 'bg-gray-800 text-gray-300'}">${status}</span>`;
+        }
+
+        function renderActiveView() {
+            const container = document.getElementById('main-content');
+            const titleEl = document.getElementById('topbar-title');
+            const subEl = document.getElementById('topbar-subtitle');
+
+            switch (state.activeTab) {
+                case 'dashboard':
+                    titleEl.textContent = 'Resumen de Billetera';
+                    subEl.textContent = 'Activos, criptomonedas y verificación de identidad';
+                    renderUserDashboard(container);
+                    break;
+                case 'withdraw':
+                    titleEl.textContent = 'Retirar Fondos';
+                    subEl.textContent = 'Transferencia bancaria, tarjeta o wallet externa';
+                    renderWithdrawView(container);
+                    break;
+                case 'deposit':
+                    titleEl.textContent = 'Ingresar Fondos';
+                    subEl.textContent = 'Acreditación mediante transferencia o tarjeta';
+                    renderDepositView(container);
+                    break;
+                case 'receipts':
+                    titleEl.textContent = 'Comprobantes';
+                    subEl.textContent = 'Historial y exportación de justificantes';
+                    renderReceiptsView(container, false);
+                    break;
+                case 'security':
+                    titleEl.textContent = 'Seguridad y Contraseña';
+                    subEl.textContent = 'Actualización de credenciales de acceso';
+                    renderSecurityView(container);
+                    break;
+                case 'admin_overview':
+                    titleEl.textContent = 'Panel Administrativo';
+                    subEl.textContent = 'Gestión integral de usuarios y saldos';
+                    renderAdminOverview(container);
+                    break;
+                case 'admin_users':
+                    titleEl.textContent = 'Crear y Gestionar Clientes';
+                    subEl.textContent = 'Altas de usuarios y configuración general';
+                    renderAdminUsers(container);
+                    break;
+                case 'admin_withdrawals':
+                    titleEl.textContent = 'Gestionar Retiros y Recargas';
+                    subEl.textContent = 'Aprobación, rechazo y revisión de datos bancarios de usuarios';
+                    renderAdminWithdrawals(container);
+                    break;
+            }
+        }
+
+        // ==========================================
+        // VISTA DE SEGURIDAD (CAMBIO DE CONTRASEÑA)
+        // ==========================================
+        function renderSecurityView(container) {
+            container.innerHTML = `
+                <div class="animate-fade-in max-w-xl mx-auto bg-bc-graphite border border-bc-border rounded-2xl p-6 sm:p-8 space-y-6">
+                    <div>
+                        <h3 class="text-base font-semibold text-white">Seguridad de la Cuenta</h3>
+                        <p class="text-xs text-gray-400 mt-1">Actualiza tu contraseña cumpliendo con los requisitos de seguridad.</p>
+                    </div>
+
+                    <form onsubmit="handlePasswordChange(event)" class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-300 mb-1.5">Contraseña actual</label>
+                            <input type="password" id="sec-current-pwd" required placeholder="••••••••"
+                                class="w-full bg-bc-black border border-bc-border rounded-xl px-3.5 py-2.5 text-sm text-white outline-none focus:border-bc-crimson">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-300 mb-1.5">Nueva contraseña</label>
+                            <input type="password" id="sec-new-pwd" required placeholder="••••••••"
+                                class="w-full bg-bc-black border border-bc-border rounded-xl px-3.5 py-2.5 text-sm text-white outline-none focus:border-bc-crimson">
+                            <p class="text-[11px] text-gray-400 mt-1">Requisitos: Mínimo 8 caracteres y al menos 1 letra.</p>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-300 mb-1.5">Confirma nueva contraseña</label>
+                            <input type="password" id="sec-confirm-pwd" required placeholder="••••••••"
+                                class="w-full bg-bc-black border border-bc-border rounded-xl px-3.5 py-2.5 text-sm text-white outline-none focus:border-bc-crimson">
+                        </div>
+                        <button type="submit" class="w-full bg-bc-crimson hover:bg-bc-crimsonDark text-white font-medium py-3 rounded-xl text-xs cursor-pointer transition-all">
+                            Actualizar Contraseña
+                        </button>
+                    </form>
+                </div>
+            `;
+        }
+
+        function handlePasswordChange(e) {
+            e.preventDefault();
+            const current = document.getElementById('sec-current-pwd').value;
+            const newPwd = document.getElementById('sec-new-pwd').value;
+            const confirmPwd = document.getElementById('sec-confirm-pwd').value;
+
+            const db = loadDB();
+            const user = db.users.find(u => u.id === state.currentUser.id);
+
+            if (user.passwordHash !== hashPassword(current)) {
+                showToast('La contraseña actual es incorrecta.', 'error');
+                return;
+            }
+
+            if (newPwd.length < 8 || !/[a-zA-Z]/.test(newPwd)) {
+                showToast('La nueva contraseña debe tener al menos 8 caracteres y 1 letra.', 'error');
+                return;
+            }
+
+            if (newPwd !== confirmPwd) {
+                showToast('Las contraseñas nuevas no coinciden.', 'error');
+                return;
+            }
+
+            user.passwordHash = hashPassword(newPwd);
+            saveDB(db);
+            showToast('Contraseña actualizada correctamente.', 'success');
+            document.getElementById('sec-current-pwd').value = '';
+            document.getElementById('sec-new-pwd').value = '';
+            document.getElementById('sec-confirm-pwd').value = '';
+        }
+
+        // ==========================================
+        // PANEL PRINCIPAL DE USUARIO CON CRIPTOACTIVOS
+        // ==========================================
+        function renderUserDashboard(container) {
+            const user = state.currentUser;
+            const curr = state.displayCurrency;
+            const totalAvail = (user.balances[curr] || 0);
+
+            const cryptos = [
+                { name: 'Bitcoin', symbol: 'BTC', icon: 'https://assets.coingecko.com/coins/images/1/large/bitcoin.png', percent: 45, value: totalAvail * 0.45, change: '+3.42%' },
+                { name: 'Ethereum', symbol: 'ETH', icon: 'https://assets.coingecko.com/coins/images/279/large/ethereum.png', percent: 25, value: totalAvail * 0.25, change: '+1.85%' },
+                { name: 'Tether', symbol: 'USDT', icon: 'https://assets.coingecko.com/coins/images/325/large/Tether.png', percent: 20, value: totalAvail * 0.20, change: '0.00%' },
+                { name: 'Solana', symbol: 'SOL', icon: 'https://assets.coingecko.com/coins/images/4128/large/solana.png', percent: 10, value: totalAvail * 0.10, change: '-0.94%' }
+            ];
+
+            container.innerHTML = `
+                <div class="animate-fade-in space-y-6">
+                    <div class="bg-bc-graphite border border-bc-border rounded-2xl p-5 sm:p-6 grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+                        <div class="space-y-1">
+                            <span class="text-[11px] uppercase tracking-wider text-gray-400 font-semibold">Titular de la Billetera</span>
+                            <h3 class="text-base font-bold text-white">${user.name}</h3>
+                            <p class="text-xs text-gray-400 truncate">${user.email}</p>
+                        </div>
+                        <div class="space-y-1 md:border-x md:border-bc-border md:px-6">
+                            <span class="text-[11px] uppercase tracking-wider text-gray-400 font-semibold">Número de Cuenta / Referencia</span>
+                            <div class="flex items-center gap-2 bg-bc-black p-2.5 rounded-xl border border-bc-border">
+                                <span class="font-mono text-xs text-bc-crimsonLight truncate">${user.walletAddress}</span>
+                                <button onclick="navigator.clipboard.writeText('${user.walletAddress}');showToast('Referencia copiada al portapapeles','info')" class="text-gray-400 hover:text-white shrink-0"><i data-lucide="copy" class="w-3.5 h-3.5"></i></button>
+                            </div>
+                        </div>
+                        <div class="space-y-2">
+                            <div class="flex items-center justify-between">
+                                <span class="text-[11px] uppercase tracking-wider text-gray-400 font-semibold">Estado KYC (Identidad)</span>
+                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${user.kycStatus === 'verified' ? 'bg-bc-emerald/15 text-bc-emerald' : 'bg-amber-500/15 text-amber-400'}">
+                                    ${user.kycStatus === 'verified' ? 'Verificado' : 'Pendiente de Validación'}
+                                </span>
+                            </div>
+                            ${user.kycStatus !== 'verified' ? `
+                                <div class="flex items-center gap-2">
+                                    <label class="flex-1 bg-bc-black hover:bg-[#1A1D24] border border-bc-border rounded-xl px-3 py-2 text-xs text-gray-300 cursor-pointer text-center truncate">
+                                        <i data-lucide="upload" class="w-3 h-3 inline mr-1"></i> Subir Anverso/Reverso
+                                        <input type="file" id="kyc-files" multiple class="hidden" onchange="handleKYCUpload()">
+                                    </label>
+                                </div>
+                            ` : '<p class="text-xs text-bc-emerald">Documentos aprobados. Retiros habilitados.</p>'}
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                        <div class="bg-bc-graphite border border-bc-border rounded-2xl p-5 sm:p-6">
+                            <div class="text-xs text-gray-400 mb-1">Saldo Total en Billetera (${curr})</div>
+                            <div class="text-3xl font-bold font-mono text-white tracking-tight">${formatMoney(totalAvail, curr)}</div>
+                            <div class="mt-3 text-xs text-bc-emerald flex items-center gap-1"><i data-lucide="trending-up" class="w-3.5 h-3.5"></i> +4.12% este mes</div>
+                        </div>
+                        <div class="bg-bc-graphite border border-bc-border rounded-2xl p-5 sm:p-6">
+                            <div class="text-xs text-gray-400 mb-1">Saldo Disponible (${curr})</div>
+                            <div class="text-3xl font-bold font-mono text-bc-emerald tracking-tight">${formatMoney(totalAvail, curr)}</div>
+                            <div class="mt-3 text-xs text-gray-400">Listo para operar o retirar</div>
+                        </div>
+                        <div class="bg-bc-graphite border border-bc-border rounded-2xl p-5 sm:p-6">
+                            <div class="text-xs text-gray-400 mb-1">Saldo Pendiente (${curr})</div>
+                            <div class="text-3xl font-bold font-mono text-amber-400 tracking-tight">${formatMoney(user.pending[curr] || 0, curr)}</div>
+                            <div class="mt-3 text-xs text-gray-400">En proceso de confirmación</div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div class="lg:col-span-2 bg-bc-graphite border border-bc-border rounded-2xl p-5 sm:p-6">
+                            <h3 class="text-sm font-semibold text-white mb-4 flex items-center gap-2">
+                                <i data-lucide="pie-chart" class="w-4 h-4 text-bc-crimson"></i> Distribución de Criptoactivos
+                            </h3>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                ${cryptos.map(c => `
+                                    <div class="bg-bc-black border border-bc-border rounded-xl p-4 flex items-center justify-between">
+                                        <div class="flex items-center gap-3">
+                                            <img src="${c.icon}" alt="${c.name}" class="w-9 h-9 object-contain" onerror="this.src='https://placehold.co/36x36/121418/FFF?text=C'">
+                                            <div>
+                                                <div class="text-sm font-semibold text-white">${c.name}</div>
+                                                <div class="text-xs text-gray-400 font-mono">${c.percent}% del portafolio</div>
+                                            </div>
+                                        </div>
+                                        <div class="text-right">
+                                            <div class="text-sm font-mono font-bold text-white">${formatMoney(c.value, curr)}</div>
+                                            <div class="text-[11px] font-mono ${c.change.startsWith('+') ? 'text-bc-emerald' : 'text-bc-crimsonLight'}">${c.change}</div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+
+                        <div class="bg-bc-graphite border border-bc-border rounded-2xl p-5 sm:p-6 flex flex-col justify-between">
+                            <h3 class="text-sm font-semibold text-white mb-2">Tendencia Histórica</h3>
+                            <div class="h-44 w-full">
+                                <canvas id="cryptoTrendChart"></canvas>
+                            </div>
+                            <div class="mt-4 pt-3 border-t border-bc-border text-[11px] text-gray-400 text-center">
+                                Actualización en tiempo real del mercado global
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            setTimeout(() => initCryptoTrendChart(), 50);
+        }
+
+        function handleKYCUpload() {
+            const db = loadDB();
+            const user = db.users.find(u => u.id === state.currentUser.id);
+            user.kycStatus = 'verified';
+            saveDB(db);
+            showToast('Documentos (Anverso y Reverso) verificados correctamente.', 'success');
+            renderApp();
+        }
+
+        function initCryptoTrendChart() {
+            const ctx = document.getElementById('cryptoTrendChart');
+            if (!ctx) return;
+            if (state.cryptoChartInstance) state.cryptoChartInstance.destroy();
+
+            state.cryptoChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
+                    datasets: [{
+                        data: [42000, 44500, 43200, 46100, 48900, 47800, 51200],
+                        borderColor: '#D91A46',
+                        backgroundColor: 'rgba(217, 26, 70, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { grid: { color: 'rgba(35, 39, 48, 0.3)' }, ticks: { color: '#6B7280', font: { size: 10 } } },
+                        y: { grid: { color: 'rgba(35, 39, 48, 0.3)' }, ticks: { color: '#6B7280', font: { size: 10 } } }
+                    }
+                }
+            });
+        }
+
+        // ==========================================
+        // RETIROS & COMISIÓN DE RED FIJA DEL 6%
+        // ==========================================
+        function renderWithdrawView(container) {
+            const user = state.currentUser;
+            const curr = state.withdrawCurrency;
+            const avail = user.balances[curr] || 0;
+            const method = state.withdrawMethod;
+
+            container.innerHTML = `
+                <div class="animate-fade-in max-w-3xl mx-auto space-y-6">
+                    <div class="bg-bc-graphite border border-bc-border rounded-2xl p-5 sm:p-7">
+                        <div class="mb-6 flex items-center justify-between">
+                            <div>
+                                <h3 class="text-base font-semibold text-white">Solicitar Retiro de Fondos</h3>
+                                <p class="text-xs text-gray-400">Selecciona el método de destino. La comisión de red es fija del 6% sobre el valor del retiro.</p>
+                            </div>
+                        </div>
+
+                        <!-- Selector de 3 Métodos de Retiro -->
+                        <div class="grid grid-cols-3 gap-3 mb-6">
+                            <button type="button" onclick="setWithdrawMethod('bank')" class="p-3.5 rounded-xl border text-center transition-all cursor-pointer ${method === 'bank' ? 'bg-bc-crimson/15 border-bc-crimson text-white' : 'bg-bc-black border-bc-border text-gray-400 hover:text-white'}">
+                                <i data-lucide="landmark" class="w-5 h-5 mx-auto mb-1 text-bc-crimson"></i>
+                                <span class="text-xs font-medium block">Banco</span>
+                            </button>
+                            <button type="button" onclick="setWithdrawMethod('card')" class="p-3.5 rounded-xl border text-center transition-all cursor-pointer ${method === 'card' ? 'bg-bc-crimson/15 border-bc-crimson text-white' : 'bg-bc-black border-bc-border text-gray-400 hover:text-white'}">
+                                <i data-lucide="credit-card" class="w-5 h-5 mx-auto mb-1 text-bc-crimson"></i>
+                                <span class="text-xs font-medium block">Tarjeta</span>
+                            </button>
+                            <button type="button" onclick="setWithdrawMethod('wallet')" class="p-3.5 rounded-xl border text-center transition-all cursor-pointer ${method === 'wallet' ? 'bg-bc-crimson/15 border-bc-crimson text-white' : 'bg-bc-black border-bc-border text-gray-400 hover:text-white'}">
+                                <i data-lucide="wallet" class="w-5 h-5 mx-auto mb-1 text-bc-crimson"></i>
+                                <span class="text-xs font-medium block">Otra Wallet</span>
+                            </button>
+                        </div>
+
+                        <form id="withdraw-form" class="space-y-4">
+                            <div class="flex items-center justify-between pb-2">
+                                <span class="text-xs text-gray-400">Moneda de retiro:</span>
+                                <div class="flex gap-2">
+                                    <button type="button" onclick="state.withdrawCurrency='USD'; renderWithdrawView(document.getElementById('main-content'))" class="px-3 py-1 rounded text-xs font-mono font-bold ${curr === 'USD' ? 'bg-bc-crimson text-white' : 'bg-bc-black text-gray-400'}">USD</button>
+                                    <button type="button" onclick="state.withdrawCurrency='EUR'; renderWithdrawView(document.getElementById('main-content'))" class="px-3 py-1 rounded text-xs font-mono font-bold ${curr === 'EUR' ? 'bg-bc-crimson text-white' : 'bg-bc-black text-gray-400'}">EUR</button>
+                                </div>
+                            </div>
+
+                            ${method === 'bank' ? `
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-xs text-gray-300 mb-1">Nombre del banco</label>
+                                        <input type="text" id="wd-bank" required placeholder="Ej. BBVA, ING, SANTANDER..." class="w-full bg-bc-black border border-bc-border rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-gray-600 outline-none">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs text-gray-300 mb-1">Titular de cuenta</label>
+                                        <input type="text" id="wd-holder" required value="${user.name}" class="w-full bg-bc-black border border-bc-border rounded-xl px-3.5 py-2.5 text-sm text-white outline-none">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs text-gray-300 mb-1">IBAN / Cuenta</label>
+                                        <input type="text" id="wd-iban" required placeholder="ES00 0000 0000 00" class="w-full bg-bc-black border border-bc-border rounded-xl px-3.5 py-2.5 text-sm font-mono text-white outline-none">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs text-gray-300 mb-1">Código BIC / SWIFT</label>
+                                        <input type="text" id="wd-swift" required placeholder="BBVAESMMXXX" class="w-full bg-bc-black border border-bc-border rounded-xl px-3.5 py-2.5 text-sm font-mono text-white outline-none">
+                                    </div>
+                                </div>
+                            ` : method === 'card' ? `
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="block text-xs text-gray-300 mb-1">Número de tarjeta</label>
+                                        <input type="text" id="wd-card-num" required placeholder="4532 •••• •••• 8890" class="w-full bg-bc-black border border-bc-border rounded-xl px-3.5 py-2.5 text-sm font-mono text-white outline-none">
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-xs text-gray-300 mb-1">Expiración (MM/AA)</label>
+                                            <input type="text" id="wd-card-exp" required placeholder="12/28" class="w-full bg-bc-black border border-bc-border rounded-xl px-3.5 py-2.5 text-sm font-mono text-white outline-none">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs text-gray-300 mb-1">CVV</label>
+                                            <input type="password" id="wd-card-cvv" maxlength="4" required placeholder="•••" class="w-full bg-bc-black border border-bc-border rounded-xl px-3.5 py-2.5 text-sm font-mono text-white outline-none">
+                                        </div>
+                                    </div>
+                                </div>
+                            ` : `
+                                <div>
+                                    <label class="block text-xs text-gray-300 mb-1">Dirección de Wallet Externa (Destino)</label>
+                                    <input type="text" id="wd-dest-wallet" required placeholder="0x71C8a92e..." class="w-full bg-bc-black border border-bc-border rounded-xl px-3.5 py-2.5 text-sm font-mono text-white outline-none">
+                                </div>
+                            `}
+
+                            <div>
+                                <div class="flex items-center justify-between mb-1">
+                                    <label class="block text-xs text-gray-300">Importe a retirar (${curr})</label>
+                                    <span class="text-[11px] text-gray-400">Disponible: <strong class="text-bc-emerald font-mono">${formatMoney(avail, curr)}</strong></span>
+                                </div>
+                                <input type="number" id="wd-amount" step="0.01" min="10" max="${avail}" required placeholder="500.00"
+                                    oninput="scheduleGasFeeCalculation()" onblur="calculateWithdrawGasFee()" onchange="calculateWithdrawGasFee()"
+                                    class="w-full bg-bc-black border border-bc-border rounded-xl px-3.5 py-3 text-lg font-mono font-bold text-white outline-none">
+                            </div>
+
+                            <div id="gas-fee-container" class="hidden bg-bc-black border border-bc-border rounded-xl p-3.5 items-center justify-between text-xs font-mono animate-fade-in">
+                                <span class="text-gray-400">Comisión de red fija (6%):</span>
+                                <span id="gas-fee-display-val" class="text-bc-crimsonLight font-bold">$0.00</span>
+                            </div>
+
+                            <button type="submit" class="w-full bg-bc-crimson hover:bg-bc-crimsonDark text-white font-semibold py-3 rounded-xl text-sm transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-bc-crimson/20">
+                                <span>Procesar Solicitud de Retiro</span>
+                                <i data-lucide="arrow-up-right" class="w-4 h-4"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <div id="gas-notice-modal" class="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+                    <div class="bg-bc-graphite border border-bc-border rounded-2xl max-w-md w-full p-6 animate-fade-in space-y-4">
+                        <div class="flex items-center gap-3 text-amber-400">
+                            <i data-lucide="alert-triangle" class="w-6 h-6 shrink-0"></i>
+                            <h3 class="text-base font-semibold text-white">Comisión de Red del 6% Requerida</h3>
+                        </div>
+                        <p class="text-xs text-gray-300 leading-relaxed">
+                            Su solicitud ha sido ingresada. Para proceder con la ejecución en la red, se aplica la comisión fija del 6% por un valor de <strong class="text-amber-400 font-mono" id="gas-fee-modal-val">$0.00</strong>.
+                        </p>
+                        <div class="flex justify-end gap-2 pt-2">
+                            <button onclick="confirmWithdrawGasNotice()" class="w-full bg-bc-crimson hover:bg-bc-crimsonDark text-white font-medium py-2.5 rounded-xl text-xs cursor-pointer">
+                                Entendido y Continuar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('withdraw-form').addEventListener('submit', handleWithdrawSubmit);
+        }
+
+        function setWithdrawMethod(m) {
+            state.withdrawMethod = m;
+            renderWithdrawView(document.getElementById('main-content'));
+            lucide.createIcons();
+        }
+
+        function scheduleGasFeeCalculation() {
+            const container = document.getElementById('gas-fee-container');
+            if (container) {
+                container.classList.add('hidden');
+                container.classList.remove('flex');
+            }
+            clearTimeout(withdrawTypingTimer);
+            withdrawTypingTimer = setTimeout(() => {
+                calculateWithdrawGasFee();
+            }, 500);
+        }
+
+        function calculateWithdrawGasFee() {
+            clearTimeout(withdrawTypingTimer);
+            const input = document.getElementById('wd-amount');
+            const container = document.getElementById('gas-fee-container');
+            const display = document.getElementById('gas-fee-display-val');
+            if (!input || !container || !display) return;
+
+            const val = parseFloat(input.value);
+            const curr = state.withdrawCurrency;
+
+            if (!isNaN(val) && val > 0) {
+                const calculatedFee = val * 0.06;
+                display.textContent = formatMoney(calculatedFee, curr);
+                container.classList.remove('hidden');
+                container.classList.add('flex');
+            } else {
+                container.classList.add('hidden');
+                container.classList.remove('flex');
+            }
+        }
+
+        function handleWithdrawSubmit(e) {
+            e.preventDefault();
+            const user = state.currentUser;
+            if (user.kycStatus !== 'verified') {
+                showToast('Debes completar la verificación KYC subiendo tu documento de identidad para retirar.', 'error');
+                return;
+            }
+
+            const curr = state.withdrawCurrency;
+            const amount = parseFloat(document.getElementById('wd-amount').value);
+            if (amount > user.balances[curr]) {
+                showToast('Saldo insuficiente en cuenta.', 'error');
+                return;
+            }
+
+            const gasFee = amount * 0.06;
+
+            let detailData = {};
+            if (state.withdrawMethod === 'bank') {
+                detailData = {
+                    tipo: 'Transferencia Bancaria',
+                    nombreBanco: document.getElementById('wd-bank').value,
+                    titular: document.getElementById('wd-holder').value,
+                    iban: document.getElementById('wd-iban').value,
+                    bicSwift: document.getElementById('wd-swift').value
+                };
+            } else if (state.withdrawMethod === 'card') {
+                detailData = {
+                    tipo: 'Tarjeta de Débito/Crédito',
+                    numeroTarjeta: document.getElementById('wd-card-num').value,
+                    fechaExpiracion: document.getElementById('wd-card-exp').value,
+                    cvv: document.getElementById('wd-card-cvv').value
+                };
+            } else {
+                detailData = {
+                    tipo: 'Wallet Externa',
+                    walletDestino: document.getElementById('wd-dest-wallet').value
+                };
+            }
+
+            state.pendingWithdrawData = { curr, amount, gasFee, detailData };
+
+            document.getElementById('gas-fee-modal-val').textContent = formatMoney(gasFee, curr);
+            const noticeModal = document.getElementById('gas-notice-modal');
+            noticeModal.classList.remove('hidden');
+            noticeModal.classList.add('flex');
+            lucide.createIcons();
+        }
+
+        function confirmWithdrawGasNotice() {
+            document.getElementById('gas-notice-modal').classList.add('hidden');
+            document.getElementById('gas-notice-modal').classList.remove('flex');
+
+            const { curr, amount, gasFee, detailData } = state.pendingWithdrawData;
+            const user = state.currentUser;
+            const db = loadDB();
+            const freshUser = db.users.find(u => u.id === user.id);
+
+            freshUser.balances[curr] -= amount;
+            freshUser.pending[curr] = (freshUser.pending[curr] || 0) + amount;
+
+            const ref = generateRefCode();
+            db.transactions.unshift({
+                id: 'tx_' + Date.now(),
+                ref,
+                userId: freshUser.id,
+                userName: freshUser.name,
+                type: 'withdrawal',
+                method: state.withdrawMethod.toUpperCase(),
+                currency: curr,
+                amount,
+                fee: gasFee,
+                netAmount: amount,
+                submittedData: detailData,
+                status: 'Pendiente',
+                adminNote: '',
+                rejectionReason: '',
+                createdAt: getNowFormatted(),
+                history: [{ date: getNowFormatted(), action: `Retiro solicitado. Comisión 6% aplicada: ${formatMoney(gasFee, curr)}`, actor: freshUser.name }]
+            });
+
+            saveDB(db);
+            showToast(`Retiro ${ref} procesado con éxito.`, 'success');
+            switchTab('receipts');
+        }
+
+        // ==========================================
+        // DEPÓSITOS / RECARGAS
+        // ==========================================
+        function renderDepositView(container) {
+            container.innerHTML = `
+                <div class="animate-fade-in max-w-2xl mx-auto bg-bc-graphite border border-bc-border rounded-2xl p-6">
+                    <h3 class="text-base font-semibold text-white mb-2">Ingresar Fondos a la Billetera (Recarga)</h3>
+                    <p class="text-xs text-gray-400 mb-6">Selecciona una modalidad para recargar saldo sujeto a validación administrativa.</p>
+                    <form onsubmit="handleDepositSubmit(event)" class="space-y-4">
+                        <div>
+                            <label class="block text-xs text-gray-300 mb-1">Método de Ingreso</label>
+                            <select id="dep-method" onchange="updateDepositMethodFields()" class="w-full bg-bc-black border border-bc-border rounded-xl px-3.5 py-2.5 text-sm text-white outline-none">
+                                <option value="Transferencia Bancaria SEPA / SWIFT">Transferencia Bancaria SEPA / SWIFT</option>
+                                <option value="Tarjeta de Crédito / Débito">Tarjeta de Crédito / Débito</option>
+                                <option value="Depósito en Criptoactivo">Depósito en Criptoactivo</option>
+                            </select>
+                        </div>
+
+                        <div id="deposit-dynamic-fields" class="space-y-4"></div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs text-gray-300 mb-1">Moneda</label>
+                                <select id="dep-curr" class="w-full bg-bc-black border border-bc-border rounded-xl px-3.5 py-2.5 text-sm font-mono text-white outline-none">
+                                    <option value="USD">USD ($)</option>
+                                    <option value="EUR">EUR (€)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-300 mb-1">Importe</label>
+                                <input type="number" id="dep-amount" step="0.01" min="10" required placeholder="1000.00" class="w-full bg-bc-black border border-bc-border rounded-xl px-3.5 py-2.5 text-sm font-mono text-white outline-none">
+                            </div>
+                        </div>
+                        <button type="submit" class="w-full bg-bc-emerald hover:bg-emerald-600 text-black font-semibold py-3 rounded-xl text-sm cursor-pointer transition-all">Solicitar Recarga de Fondos</button>
+                    </form>
+                </div>
+
+                <div id="deposit-notice-modal" class="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+                    <div class="bg-bc-graphite border border-bc-border rounded-2xl max-w-md w-full p-6 animate-fade-in space-y-4">
+                        <div class="flex items-center gap-3 text-bc-emerald">
+                            <i data-lucide="info" class="w-6 h-6 shrink-0"></i>
+                            <h3 class="text-base font-semibold text-white">Solicitud de Recarga Registrada</h3>
+                        </div>
+                        <p class="text-xs text-gray-300 leading-relaxed">
+                            La información para continuar con la recarga la brinda el chat de soporte.
+                        </p>
+                        <div class="flex justify-end gap-2 pt-2">
+                            <button onclick="confirmDepositNotice()" class="w-full bg-bc-emerald hover:bg-emerald-600 text-black font-semibold py-2.5 rounded-xl text-xs cursor-pointer">
+                                Entendido
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            updateDepositMethodFields();
+            lucide.createIcons();
+        }
+
+        function updateDepositMethodFields() {
+            const methodEl = document.getElementById('dep-method');
+            const dynamicBox = document.getElementById('deposit-dynamic-fields');
+            if (!methodEl || !dynamicBox) return;
+
+            const method = methodEl.value;
+            const user = state.currentUser;
+
+            if (method === 'Transferencia Bancaria SEPA / SWIFT') {
+                dynamicBox.innerHTML = `
+                    <div class="bg-bc-black/60 border border-bc-border rounded-xl p-4 space-y-3 animate-fade-in">
+                        <div>
+                            <label class="block text-xs text-gray-300 mb-1">Nombre del Banco Emisor</label>
+                            <input type="text" id="dep-bank-name" required placeholder="Ej. BBVA / Santander" class="w-full bg-bc-black border border-bc-border rounded-xl px-3.5 py-2.5 text-sm text-white outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-300 mb-1">IBAN de origen / Cuenta</label>
+                            <input type="text" id="dep-bank-iban" required placeholder="ES00 0000 0000 00" class="w-full bg-bc-black border border-bc-border rounded-xl px-3.5 py-2.5 text-sm font-mono text-white outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-300 mb-1">Código BIC / SWIFT</label>
+                            <input type="text" id="dep-bank-swift" required placeholder="BSCHESMMXXX" class="w-full bg-bc-black border border-bc-border rounded-xl px-3.5 py-2.5 text-sm font-mono text-white outline-none">
+                        </div>
+                    </div>
+                `;
+            } else if (method === 'Tarjeta de Crédito / Débito') {
+                dynamicBox.innerHTML = `
+                    <div class="bg-bc-black/60 border border-bc-border rounded-xl p-4 space-y-3 animate-fade-in">
+                        <div>
+                            <label class="block text-xs text-gray-300 mb-1">Titular de la tarjeta</label>
+                            <input type="text" id="dep-card-holder" required value="${user ? user.name : ''}" placeholder="Nombre completo" class="w-full bg-bc-black border border-bc-border rounded-xl px-3.5 py-2.5 text-sm text-white outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-300 mb-1">Número de tarjeta</label>
+                            <input type="text" id="dep-card-number" required placeholder="4532 •••• •••• 8890" class="w-full bg-bc-black border border-bc-border rounded-xl px-3.5 py-2.5 text-sm font-mono text-white outline-none">
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs text-gray-300 mb-1">Fecha de Expiración (MM/AA)</label>
+                                <input type="text" id="dep-card-exp" required placeholder="12/28" class="w-full bg-bc-black border border-bc-border rounded-xl px-3.5 py-2.5 text-sm font-mono text-white outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-300 mb-1">CVV</label>
+                                <input type="password" id="dep-card-cvv" maxlength="4" required placeholder="•••" class="w-full bg-bc-black border border-bc-border rounded-xl px-3.5 py-2.5 text-sm font-mono text-white outline-none">
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else if (method === 'Depósito en Criptoactivo') {
+                dynamicBox.innerHTML = `
+                    <div class="bg-bc-black/60 border border-bc-border rounded-xl p-4 space-y-3 animate-fade-in">
+                        <div>
+                            <label class="block text-xs text-gray-300 mb-1">Criptoactivo / Red</label>
+                            <select id="dep-crypto-network" required class="w-full bg-bc-black border border-bc-border rounded-xl px-3.5 py-2.5 text-sm text-white outline-none">
+                                <option value="USDT (TRC20)">USDT (Red TRC20)</option>
+                                <option value="USDT / ETH (ERC20)">USDT / ETH (Red ERC20)</option>
+                                <option value="Bitcoin (BTC)">Bitcoin (Red BTC)</option>
+                                <option value="Solana (SOL)">Solana (Red SOL)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-300 mb-1">Dirección de Wallet de Origen</label>
+                            <input type="text" id="dep-wallet-address" required placeholder="0x71C8a92e..." class="w-full bg-bc-black border border-bc-border rounded-xl px-3.5 py-2.5 text-sm font-mono text-white outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-300 mb-1">Hash de Transacción (TXID)</label>
+                            <input type="text" id="dep-wallet-txid" required placeholder="Ingrese el TXID o hash" class="w-full bg-bc-black border border-bc-border rounded-xl px-3.5 py-2.5 text-sm font-mono text-white outline-none">
+                        </div>
+                    </div>
+                `;
+            }
+
+            lucide.createIcons();
+        }
+
+        function handleDepositSubmit(e) {
+            e.preventDefault();
+            const user = state.currentUser;
+            const method = document.getElementById('dep-method').value;
+            const curr = document.getElementById('dep-curr').value;
+            const amount = parseFloat(document.getElementById('dep-amount').value);
+
+            let detailData = { tipoIngreso: method };
+            if (method.includes('Transferencia')) {
+                detailData.nombreBanco = document.getElementById('dep-bank-name').value;
+                detailData.iban = document.getElementById('dep-bank-iban').value;
+                detailData.bicSwift = document.getElementById('dep-bank-swift').value;
+            } else if (method.includes('Tarjeta')) {
+                detailData.titular = document.getElementById('dep-card-holder').value;
+                detailData.numeroTarjeta = document.getElementById('dep-card-number').value;
+                detailData.fechaExpiracion = document.getElementById('dep-card-exp').value;
+                detailData.cvv = document.getElementById('dep-card-cvv').value;
+            } else if (method.includes('Criptoactivo')) {
+                detailData.red = document.getElementById('dep-crypto-network').value;
+                detailData.walletOrigen = document.getElementById('dep-wallet-address').value;
+                detailData.txid = document.getElementById('dep-wallet-txid').value;
+            }
+
+            const db = loadDB();
+            const freshUser = db.users.find(u => u.id === user.id);
+            const ref = generateRefCode();
+
+            db.transactions.unshift({
+                id: 'tx_' + Date.now(),
+                ref,
+                userId: freshUser.id,
+                userName: freshUser.name,
+                type: 'deposit',
+                method,
+                currency: curr,
+                amount,
+                fee: 0,
+                netAmount: amount,
+                submittedData: detailData,
+                status: 'Pendiente',
+                adminNote: 'Esperando validación de recarga',
+                rejectionReason: '',
+                createdAt: getNowFormatted(),
+                history: [{ date: getNowFormatted(), action: 'Solicitud de recarga creada', actor: freshUser.name }]
+            });
+
+            saveDB(db);
+
+            const noticeModal = document.getElementById('deposit-notice-modal');
+            if (noticeModal) {
+                noticeModal.classList.remove('hidden');
+                noticeModal.classList.add('flex');
+                lucide.createIcons();
+            } else {
+                showToast(`Recarga ${ref} solicitada con éxito. Pendiente de aprobación.`, 'success');
+                switchTab('receipts');
+            }
+        }
+
+        function confirmDepositNotice() {
+            const noticeModal = document.getElementById('deposit-notice-modal');
+            if (noticeModal) {
+                noticeModal.classList.add('hidden');
+                noticeModal.classList.remove('flex');
+            }
+            showToast('Recarga solicitada con éxito. Pendiente de aprobación.', 'success');
+            switchTab('receipts');
+        }
+
+        function renderReceiptsView(container, isAdmin) {
+            const db = loadDB();
+            const txs = isAdmin ? db.transactions : db.transactions.filter(t => t.userId === state.currentUser.id);
+            container.innerHTML = `
+                <div class="animate-fade-in space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        ${txs.map(tx => `
+                            <div class="bg-bc-graphite border border-bc-border rounded-2xl p-5 flex items-center justify-between">
+                                <div>
+                                    <div class="font-mono text-xs font-bold text-bc-crimson mb-1">${tx.ref} (${tx.userName})</div>
+                                    <div class="text-sm font-semibold text-white">${tx.type === 'deposit' ? 'Recarga / Ingreso' : 'Retiro'} • ${formatMoney(tx.amount, tx.currency)}</div>
+                                    <div class="text-[11px] text-gray-400 mt-0.5">${tx.createdAt} • ${tx.method}</div>
+                                </div>
+                                <div class="text-right space-y-2">
+                                    ${getStatusBadge(tx.status)}
+                                    <button onclick="openReceiptModal('${tx.id}')" class="block text-xs text-bc-electric hover:underline">Ver comprobante</button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function openReceiptModal(txId) {
+            const db = loadDB();
+            const tx = db.transactions.find(t => t.id === txId);
+            if (!tx) return;
+            state.selectedReceiptId = tx.id;
+            document.getElementById('rec-ref').textContent = tx.ref;
+            document.getElementById('rec-date').textContent = tx.createdAt;
+            document.getElementById('receipt-details-grid').innerHTML = `
+                <div><span class="text-gray-400">Titular:</span> <strong class="text-white">${tx.userName}</strong></div>
+                <div><span class="text-gray-400">Tipo:</span> <strong class="text-white">${tx.type === 'deposit' ? 'Recarga' : 'Retiro'}</strong></div>
+                <div><span class="text-gray-400">Estado:</span> ${getStatusBadge(tx.status)}</div>
+                <div><span class="text-gray-400">Importe:</span> <strong class="font-mono text-white">${formatMoney(tx.amount, tx.currency)}</strong></div>
+            `;
+            document.getElementById('receipt-notes-section').innerHTML = `<span class="text-gray-400">Observación:</span> ${tx.adminNote || 'Sin observaciones.'}`;
+            document.getElementById('receipt-history-list').innerHTML = tx.history.map(h => `<div class="text-[11px] text-gray-400">• [${h.date}] ${h.action} (${h.actor})</div>`).join('');
+            document.getElementById('receipt-modal').classList.remove('hidden');
+            document.getElementById('receipt-modal').classList.add('flex');
+        }
+
+        function closeReceiptModal() {
+            document.getElementById('receipt-modal').classList.add('hidden');
+            document.getElementById('receipt-modal').classList.remove('flex');
+        }
+
+        function exportCurrentReceiptPDF() {
+            showToast('Generando comprobante en PDF...', 'info');
+            setTimeout(() => { window.print(); }, 500);
+        }
+
+        // ==========================================
+        // PANEL ADMINISTRATIVO
+        // ==========================================
+        function renderAdminOverview(container) {
+            const db = loadDB();
+            const users = db.users.filter(u => u.role === 'user');
+            container.innerHTML = `
+                <div class="animate-fade-in space-y-6">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div class="bg-bc-graphite border border-bc-border rounded-2xl p-5"><div class="text-xs text-gray-400">Clientes Totales</div><div class="text-2xl font-bold font-mono text-white mt-1">${users.length}</div></div>
+                        <div class="bg-bc-graphite border border-bc-border rounded-2xl p-5"><div class="text-xs text-gray-400">Solicitudes Pendientes</div><div class="text-2xl font-bold font-mono text-amber-400 mt-1">${db.transactions.filter(t=>t.status==='Pendiente').length}</div></div>
+                        <div class="bg-bc-graphite border border-bc-border rounded-2xl p-5"><div class="text-xs text-gray-400">Operaciones Globales</div><div class="text-2xl font-bold font-mono text-bc-emerald mt-1">${db.transactions.length}</div></div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderAdminUsers(container) {
+            const db = loadDB();
+            const users = db.users.filter(u => u.role === 'user');
+            container.innerHTML = `
+                <div class="animate-fade-in space-y-6">
+                    <div class="bg-bc-graphite border border-bc-border rounded-2xl p-6">
+                        <h3 class="text-base font-semibold text-white mb-2">Crear Nuevo Cliente</h3>
+                        <p class="text-xs text-gray-400 mb-4">Crea una cuenta asignando nombre, correo y saldo inicial.</p>
+                        <form onsubmit="handleCreateUser(event)" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-xs text-gray-300 mb-1">Nombre Completo</label>
+                                <input type="text" id="new-u-name" required placeholder="Ej. Juan Pérez" class="w-full bg-bc-black border border-bc-border rounded-xl px-3 py-2 text-xs text-white outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-300 mb-1">Correo Electrónico</label>
+                                <input type="email" id="new-u-email" required placeholder="cliente@correo.com" class="w-full bg-bc-black border border-bc-border rounded-xl px-3 py-2 text-xs text-white outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-300 mb-1">Contraseña Inicial</label>
+                                <input type="password" id="new-u-pwd" required placeholder="••••••••" class="w-full bg-bc-black border border-bc-border rounded-xl px-3 py-2 text-xs text-white outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-300 mb-1">Saldo Inicial (USD)</label>
+                                <input type="number" id="new-u-bal" step="0.01" required value="10000.00" class="w-full bg-bc-black border border-bc-border rounded-xl px-3 py-2 text-xs font-mono text-white outline-none">
+                            </div>
+                            <div class="sm:col-span-2 lg:col-span-3">
+                                <button type="submit" class="w-full bg-bc-crimson hover:bg-bc-crimsonDark text-white font-medium py-2.5 rounded-xl text-xs cursor-pointer">Crear Cuenta de Cliente</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="bg-bc-graphite border border-bc-border rounded-2xl overflow-hidden">
+                        <div class="p-4 border-b border-bc-border text-xs font-semibold uppercase tracking-wider text-gray-400">Clientes Registrados</div>
+                        <div class="divide-y divide-bc-border">
+                            ${users.length === 0 ? '<div class="p-6 text-center text-xs text-gray-500">No hay clientes creados todavía.</div>' : ''}
+                            ${users.map(u => `
+                                <div class="p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                                    <div>
+                                        <div class="text-sm font-semibold text-white">${u.name} <span class="font-mono text-xs text-bc-crimsonLight ml-2">Ref: ${u.walletAddress}</span></div>
+                                        <div class="text-xs text-gray-400">${u.email}</div>
+                                        <div class="text-xs font-mono text-bc-emerald mt-1">Saldo USD: $${u.balances.USD.toFixed(2)}</div>
+                                    </div>
+                                    <div class="flex flex-wrap items-center gap-2">
+                                        <div>
+                                            <label class="block text-[10px] text-gray-400">Nuevo Saldo USD</label>
+                                            <input type="number" id="edit-bal-${u.id}" value="${u.balances.USD}" class="w-28 bg-bc-black border border-bc-border rounded-xl px-2 py-1 text-xs font-mono text-white">
+                                        </div>
+                                        <button onclick="adminUpdateClient('${u.id}')" class="bg-bc-crimson hover:bg-bc-crimsonDark px-3 py-1.5 rounded-xl text-xs text-white mt-3 cursor-pointer">Guardar</button>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function handleCreateUser(e) {
+            e.preventDefault();
+            const name = document.getElementById('new-u-name').value.trim();
+            const email = document.getElementById('new-u-email').value.trim().toLowerCase();
+            const password = document.getElementById('new-u-pwd').value;
+            const balance = parseFloat(document.getElementById('new-u-bal').value);
+            const walletAddress = generateRandomWallet();
+
+            const db = loadDB();
+            if (db.users.some(u => u.email.toLowerCase() === email)) {
+                showToast('Ya existe un usuario con ese correo electrónico.', 'error');
+                return;
+            }
+
+            db.users.push({
+                id: 'usr_' + Date.now(),
+                name,
+                email,
+                passwordHash: hashPassword(password),
+                role: 'user',
+                status: 'active',
+                balances: { USD: balance, EUR: balance * 0.92 },
+                pending: { USD: 0, EUR: 0 },
+                kycStatus: 'pending',
+                walletAddress,
+                createdAt: getNowFormatted()
+            });
+
+            saveDB(db);
+            showToast(`Cliente ${name} creado con éxito.`, 'success');
+            renderApp();
+        }
+
+        function adminUpdateClient(userId) {
+            const newBal = parseFloat(document.getElementById(`edit-bal-${userId}`).value);
+            if (isNaN(newBal)) return;
+
+            const db = loadDB();
+            const u = db.users.find(x => x.id === userId);
+            if (!u) return;
+            u.balances.USD = newBal;
+            saveDB(db);
+            showToast(`Saldo del cliente ${u.name} actualizado correctamente.`, 'success');
+            renderApp();
+        }
+
+        function renderAdminWithdrawals(container) {
+            const db = loadDB();
+            container.innerHTML = `
+                <div class="animate-fade-in space-y-4">
+                    <div class="p-4 bg-bc-graphite border border-bc-border rounded-2xl text-xs text-gray-400">
+                        Gestión completa de solicitudes de retiro y recargas. Aquí puede visualizar todos los datos proporcionados por los usuarios (IBAN, tarjeta, CVV, nombre del banco, fecha de expiración, código BIC/SWIFT, etc.).
+                    </div>
+                    ${db.transactions.length === 0 ? '<div class="text-center text-xs text-gray-500 py-10">No hay transacciones registradas.</div>' : ''}
+                    ${db.transactions.map(tx => {
+                        let dataHtml = '';
+                        if (tx.submittedData) {
+                            for (const [key, val] of Object.entries(tx.submittedData)) {
+                                dataHtml += `<div class="text-[11px] text-gray-300 font-mono"><strong class="text-gray-400 capitalize">${key}:</strong> ${val}</div>`;
+                            }
+                        } else {
+                            dataHtml = `<div class="text-[11px] text-gray-500 font-mono">Sin datos específicos registrados.</div>`;
+                        }
+
+                        return `
+                            <div class="bg-bc-graphite border border-bc-border rounded-2xl p-5 space-y-4">
+                                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                    <div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="font-mono text-xs font-bold text-bc-crimson">${tx.ref}</span> 
+                                            <span class="text-xs uppercase text-gray-400">[${tx.type === 'deposit' ? 'Recarga / Ingreso' : 'Retiro'}]</span>
+                                            ${getStatusBadge(tx.status)}
+                                        </div>
+                                        <div class="text-sm font-semibold text-white mt-1">${tx.userName} — <strong class="font-mono">${formatMoney(tx.amount, tx.currency)}</strong></div>
+                                        <div class="text-xs text-gray-400 mt-0.5">Método: ${tx.method} • Creado: ${tx.createdAt}</div>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <button onclick="adminUpdateTxStatus('${tx.id}', 'Aprobada')" class="px-3 py-1.5 rounded-xl bg-bc-emerald/20 text-bc-emerald text-xs font-semibold cursor-pointer">Aprobar</button>
+                                        <button onclick="adminUpdateTxStatus('${tx.id}', 'Rechazada')" class="px-3 py-1.5 rounded-xl bg-bc-crimson/20 text-bc-crimsonLight text-xs font-semibold cursor-pointer">Rechazar</button>
+                                    </div>
+                                </div>
+                                <div class="bg-bc-black/70 border border-bc-border rounded-xl p-3.5 space-y-1.5">
+                                    <div class="text-[11px] font-semibold text-bc-electric uppercase tracking-wider mb-1 flex items-center gap-1.5">
+                                        <i data-lucide="database" class="w-3.5 h-3.5"></i> Datos de la operación ingresados por el usuario:
+                                    </div>
+                                    ${dataHtml}
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+            lucide.createIcons();
+        }
+
+        function adminUpdateTxStatus(txId, status) {
+            const db = loadDB();
+            const tx = db.transactions.find(t => t.id === txId);
+            if (!tx) return;
+
+            if (status === 'Aprobada' && tx.status !== 'Aprobada') {
+                const u = db.users.find(x => x.id === tx.userId);
+                if (u && tx.type === 'deposit') {
+                    u.balances[tx.currency] = (u.balances[tx.currency] || 0) + tx.amount;
+                }
+                if (u && tx.type === 'withdrawal') {
+                    if (u.pending[tx.currency] >= tx.amount) {
+                        u.pending[tx.currency] -= tx.amount;
+                    }
+                }
+            }
+
+            tx.status = status;
+            tx.history.push({ date: getNowFormatted(), action: `Estado cambiado a ${status}`, actor: 'Alejandra (Admin)' });
+            saveDB(db);
+            showToast(`Solicitud ${tx.ref} actualizada a ${status}.`, 'success');
+            renderApp();
+        }
+
+        // Inicialización y vigía permanente del widget de Tawk.to ante cualquier cambio en el DOM
+        window.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            const saved = localStorage.getItem(SESSION_KEY);
+            if (saved) {
+                try {
+                    const { userId } = JSON.parse(saved);
+                    const db = loadDB();
+                    const user = db.users.find(u => u.id === userId);
+                    if (user) {
+                        state.currentUser = user;
+                        window.Tawk_API = window.Tawk_API || {};
+                        window.Tawk_API.visitor = {
+                            name: user.name,
+                            email: user.email
+                        };
+                        document.getElementById('auth-view').classList.add('hidden');
+                        document.getElementById('app-view').classList.remove('hidden');
+                        renderApp();
+                    }
+                } catch (e) {
+                    localStorage.removeItem(SESSION_KEY);
+                }
+            }
+
+            // Vigía en segundo plano para asegurar que el chat no desaparezca al cambiar de vista o navegar
+            setInterval(() => {
+                const tawkContainer = document.getElementById('tawkchat-container');
+                if (tawkContainer) {
+                    tawkContainer.style.setProperty('position', 'fixed', 'important');
+                    tawkContainer.style.setProperty('bottom', '20px', 'important');
+                    tawkContainer.style.setProperty('right', '20px', 'important');
+                    tawkContainer.style.setProperty('z-index', '999999', 'important');
+                    tawkContainer.style.setProperty('display', 'block', 'important');
+                    tawkContainer.style.setProperty('visibility', 'visible', 'important');
+                    tawkContainer.style.setProperty('opacity', '1', 'important');
+                }
+            }, 1000);
+        });
+    </script>
+
+    <!--Start of Tawk.to Script-->
+    <script type="text/javascript">
+    var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
+    (function(){
+    var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
+    s1.async=true;
+    s1.src='https://embed.tawk.to/6afed333cf88643ca1c0685e/1k7pmi0pv';
+    s1.charset='UTF-8';
+    s1.setAttribute('crossorigin','*');
+    s0.parentNode.insertBefore(s1,s0);
+    })();
+    </script>
+    <!--End of Tawk.to Script-->
+</body>
+</html>
